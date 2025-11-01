@@ -1,28 +1,16 @@
-# This is a basic workflow to help you get started with Actions
-
 name: My First Workflow
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: self-hosted
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
       - name: Set branch and short commit SHA variables
@@ -34,19 +22,19 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image with GHCR prefix and commit tag
+      - name: Build Docker image with GHCR tag
         run: |
-          docker build -t ghcr.io/<your-github-username>/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }} .
+          docker build -t ghcr.io/${{ github.repository_owner }}/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }} .
           docker images
 
       - name: Push Docker image to GHCR
         run: |
-          docker push ghcr.io/<your-github-username>/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+          docker push ghcr.io/${{ github.repository_owner }}/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
 
       - name: Run Docker container with tagged image
         run: |
-          docker run -d -p 8080:80 --name hello-world-nginx-container ghcr.io/<your-github-username>/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+          docker run -d -p 8080:80 --name hello-world-nginx-container ghcr.io/${{ github.repository_owner }}/hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
           docker ps
