@@ -25,11 +25,17 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      - name: Build the Docker image
-        run: docker build -t hello-world-nginx:v1 .
+      - name: Set branch and short commit SHA variables
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
 
-      - name: Run the Docker container
-        run: docker run -d -p 8080:80 --name hello-world-container hello-world-nginx:v1
-          
-      - name: Check Docker container status
-        run: docker ps -a
+      - name: Build Docker image with branch and commit SHA tag
+        run: |
+          docker build -t hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }} .
+          docker images
+
+      - name: Run Docker container with tagged image
+        run: |
+          docker run -d -p 8080:80 --name hello-world-nginx-container hello-world-nginx:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+          docker ps
